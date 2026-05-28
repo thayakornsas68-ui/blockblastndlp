@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0">
-<title>Block Blast Ultimate</title>
+
+<title>Dont Ban Me</title>
 
 <style>
 
@@ -161,6 +162,11 @@ linear-gradient(
 box-shadow:
 inset 0 2px 4px rgba(255,255,255,.04);
 
+transition:
+transform .05s,
+box-shadow .05s,
+background .05s;
+
 }
 
 .cell.preview{
@@ -182,14 +188,6 @@ inset 0 0 14px rgba(255,255,255,.12);
 
 .cell.filled{
 
-background:
-linear-gradient(
-180deg,
-#c9fbff 0%,
-#7defff 45%,
-#2fdcff 100%
-);
-
 border:
 1px solid rgba(255,255,255,.30);
 
@@ -208,7 +206,7 @@ display:flex;
 justify-content:space-between;
 align-items:flex-end;
 
-gap:10px;
+gap:14px;
 
 min-height:150px;
 
@@ -236,14 +234,19 @@ touch-action:none;
 
 transition:none;
 
+will-change:
+transform,left,top;
+
+transform:
+translate3d(0,0,0);
+
 }
 
 .piece.dragging{
 
 cursor:grabbing;
 
-transform:
-scale(1.04);
+z-index:999999;
 
 filter:
 drop-shadow(0 14px 24px rgba(0,0,0,.45));
@@ -259,21 +262,8 @@ height:100%;
 
 border-radius:11px;
 
-background:
-linear-gradient(
-180deg,
-#c9fbff 0%,
-#7defff 45%,
-#2fdcff 100%
-);
-
 border:
 1px solid rgba(255,255,255,.30);
-
-box-shadow:
-0 0 22px rgba(34,211,238,.48),
-inset 0 2px 6px rgba(255,255,255,.85),
-inset 0 -2px 5px rgba(0,0,0,.10);
 
 }
 
@@ -340,16 +330,17 @@ translateY(-50px);
 
 position:fixed;
 
-width:12px;
-height:12px;
+width:14px;
+height:14px;
 
 border-radius:50%;
-
-background:#67e8f9;
 
 pointer-events:none;
 
 z-index:999999999;
+
+box-shadow:
+0 0 14px currentColor;
 
 }
 
@@ -901,20 +892,12 @@ shape[0].length
 const pieceHeight=
 shape.length
 
-const rawCol=
-((x-boardRect.left)/cellSize)
--(pieceWidth/2)
-
-const rawRow=
-((y-boardRect.top)/cellSize)
--(pieceHeight/2)
-
 let best=null
 let bestDist=999999
 
-for(let r=-1;r<SIZE;r++){
+for(let r=0;r<SIZE;r++){
 
-for(let c=-1;c<SIZE;c++){
+for(let c=0;c<SIZE;c++){
 
 if(canPlace(r,c,shape)){
 
@@ -946,18 +929,7 @@ best={row:r,col:c}
 
 }
 
-if(bestDist<cellSize*1.15){
-
 return best
-
-}
-
-return{
-
-row:Math.round(rawRow),
-col:Math.round(rawCol)
-
-}
 
 }
 
@@ -1003,6 +975,45 @@ cell.classList.add(
 
 }
 
+function spawnParticles(x,y,color){
+
+for(let i=0;i<28;i++){
+
+const p=
+document.createElement("div")
+
+p.className="particle"
+
+p.style.left=x+"px"
+p.style.top=y+"px"
+
+p.style.background=color
+
+p.style.setProperty(
+"--x",
+(Math.random()*260-130)+"px"
+)
+
+p.style.setProperty(
+"--y",
+(Math.random()*260-130)+"px"
+)
+
+p.style.animation=
+"particle .7s forwards"
+
+document.body.appendChild(p)
+
+setTimeout(()=>{
+
+p.remove()
+
+},700)
+
+}
+
+}
+
 function enableDrag(piece){
 
 piece.addEventListener(
@@ -1033,9 +1044,6 @@ piece.classList.add(
 piece.style.position=
 "fixed"
 
-piece.style.zIndex=
-"999999"
-
 piece.style.pointerEvents=
 "none"
 
@@ -1043,15 +1051,27 @@ move(e)
 
 function move(ev){
 
-piece.style.left=
-(
+cancelAnimationFrame(
+piece.raf
+)
+
+piece.raf=
+requestAnimationFrame(()=>{
+
+const x=
 ev.clientX-shiftX
-)+"px"
+
+const y=
+ev.clientY-shiftY
+
+piece.style.left=
+x+"px"
 
 piece.style.top=
-(
-ev.clientY-shiftY
-)+"px"
+y+"px"
+
+piece.style.transform=
+"translate3d(0,0,0)"
 
 const fit=
 findBestFit(
@@ -1060,11 +1080,17 @@ ev.clientX,
 ev.clientY
 )
 
+if(fit){
+
 showPreview(
 fit.row,
 fit.col,
 piece.shape
 )
+
+}
+
+})
 
 }
 
@@ -1079,13 +1105,19 @@ ev.clientX,
 ev.clientY
 )
 
-const placed=
+let placed=false
+
+if(fit){
+
+placed=
 placeShape(
 fit.row,
 fit.col,
 piece.shape,
 piece.color
 )
+
+}
 
 if(placed){
 
@@ -1167,6 +1199,9 @@ shape
 return false
 }
 
+placeSound.currentTime=0
+placeSound.play()
+
 shape.forEach((rArr,r)=>{
 
 rArr.forEach((v,c)=>{
@@ -1242,6 +1277,12 @@ index:c
 
 if(lines.length){
 
+clearSound.currentTime=0
+clearSound.play()
+
+comboSound.currentTime=0
+comboSound.play()
+
 combo++
 
 score +=
@@ -1253,6 +1294,24 @@ if(line.type==="row"){
 
 for(let c=0;c<SIZE;c++){
 
+const cell=
+document.querySelector(
+`.cell[data-row="${line.index}"][data-col="${c}"]`
+)
+
+if(cell){
+
+const rect=
+cell.getBoundingClientRect()
+
+spawnParticles(
+rect.left+rect.width/2,
+rect.top+rect.height/2,
+"#67e8f9"
+)
+
+}
+
 grid[line.index][c]=0
 
 }
@@ -1260,6 +1319,24 @@ grid[line.index][c]=0
 }else{
 
 for(let r=0;r<SIZE;r++){
+
+const cell=
+document.querySelector(
+`.cell[data-row="${r}"][data-col="${line.index}"]`
+)
+
+if(cell){
+
+const rect=
+cell.getBoundingClientRect()
+
+spawnParticles(
+rect.left+rect.width/2,
+rect.top+rect.height/2,
+"#67e8f9"
+)
+
+}
 
 grid[r][line.index]=0
 
