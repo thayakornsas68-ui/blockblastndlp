@@ -123,9 +123,9 @@ p{
     id="key"
     placeholder="Enter your key">
 
-    <button onclick="activateKey()">
-        Activate
-    </button>
+   <button id="activateBtn">
+    Activate
+   </button>
 
     <p>
         Buy key from owner
@@ -149,9 +149,26 @@ SUPABASE_URL,
 SUPABASE_KEY
 );
 
-window.activateKey = async function(){
+<script>
 
-    alert("activate ทำงานแล้ว");
+const SUPABASE_URL =
+"https://utgjjpjxomkwpnshtxlr.supabase.co";
+
+const SUPABASE_KEY =
+"ใส่ publishable key";
+
+const supabase =
+window.supabase.createClient(
+SUPABASE_URL,
+SUPABASE_KEY
+);
+
+document
+.getElementById("activateBtn")
+.addEventListener("click", async ()=>{
+
+    alert("ปุ่มทำงานแล้ว");
+
     const key =
     document.getElementById("key").value;
 
@@ -231,7 +248,7 @@ window.activateKey = async function(){
 
     location.href="game.html";
 
-}
+});
 
 </script>
 
