@@ -125,13 +125,15 @@ p{
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <script>
 
 const SUPABASE_URL =
 "https://utgjjpjxomkwpnshtxlr.supabase.co";
 
 const SUPABASE_KEY =
-"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV0Z2pqcGp4b21rd3Buc2h0eGxyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAwNTMwMDIsImV4cCI6MjA5NTYyOTAwMn0.RXv5Gg369huUOKmgqsou4PkoeYwWO2-S9TzHu2a2-40";
+"ใส่ key ที่ใช้อยู่ตอนนี้";
 
 const supabase =
 window.supabase.createClient(
@@ -139,10 +141,9 @@ window.supabase.createClient(
     SUPABASE_KEY
 );
 
-const btn =
-document.getElementById("activateBtn");
-
-btn.addEventListener("click", async ()=>{
+document
+.getElementById("activateBtn")
+.addEventListener("click", async () => {
 
     const key =
     document
@@ -150,82 +151,41 @@ btn.addEventListener("click", async ()=>{
     .value
     .trim();
 
-    if(!key){
+    console.log("เริ่มเช็ค");
+    console.log("key =", key);
 
-        alert("กรุณาใส่ License");
+    try {
 
-        return;
-    }
-
-    let device =
-    localStorage.getItem("device");
-
-    if(!device){
-
-        device = crypto.randomUUID();
-
-        localStorage
-        .setItem("device", device);
-    }
-
-    const { data, error } =
-    await supabase
-    .from("licenses")
-    .select("*")
-    .eq("license_key", key)
-    .single();
-
-    if(error || !data){
-
-        alert("License ไม่ถูกต้อง");
-
-        console.log(error);
-
-        return;
-    }
-
-    if(data.active !== true){
-
-        alert("License ถูกปิด");
-
-        return;
-    }
-
-    if(!data.device_id){
-
-        const updateResult =
+        const { data, error } =
         await supabase
         .from("licenses")
-        .update({
-            device_id:device
-        })
+        .select("*")
         .eq("license_key", key);
 
-        console.log(updateResult);
+        console.log("data =", data);
+        console.log("error =", error);
 
-        localStorage
-        .setItem("licensed","yes");
+        if(error){
+            alert("มี error ดู Console");
+            return;
+        }
 
-        location.href="game.html";
+        if(!data || data.length === 0){
+            alert("ไม่พบ License");
+            return;
+        }
 
-        return;
+        alert("เจอ License แล้ว!");
+
+    } catch(err){
+
+        console.error(err);
+        alert("เกิด Exception ดู Console");
+
     }
-
-    if(data.device_id !== device){
-
-        alert("คีย์นี้ถูกใช้แล้ว");
-
-        return;
-    }
-
-    localStorage
-    .setItem("licensed","yes");
-
-    location.href="game.html";
 
 });
 
 </script>
-
 </body>
 </html>
