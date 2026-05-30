@@ -2,8 +2,7 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport"
-content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <title>Activate License</title>
 
@@ -17,88 +16,54 @@ content="width=device-width, initial-scale=1.0">
 }
 
 body{
-
     width:100%;
     height:100vh;
-
     display:flex;
     justify-content:center;
     align-items:center;
-
     background:#111;
-
 }
 
 .box{
-
     width:350px;
-
     background:#222;
-
     padding:30px;
-
     border-radius:25px;
-
     text-align:center;
-
 }
 
 h1{
-
     color:white;
-
     margin-bottom:20px;
-
 }
 
 input{
-
     width:100%;
-
     padding:15px;
-
     border:none;
-
     border-radius:12px;
-
     margin-bottom:15px;
-
     font-size:16px;
-
 }
 
 button{
-
     width:100%;
-
     padding:15px;
-
     border:none;
-
     border-radius:12px;
-
     background:#00bfff;
-
     color:white;
-
     font-size:18px;
-
     cursor:pointer;
-
 }
 
 button:hover{
-
     opacity:0.9;
-
 }
 
 p{
-
     color:#999;
-
     margin-top:15px;
-
 }
 
 </style>
@@ -133,7 +98,7 @@ const SUPABASE_URL =
 const SUPABASE_KEY =
 "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV0Z2pqcGp4b21rd3Buc2h0eGxyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAwNTMwMDIsImV4cCI6MjA5NTYyOTAwMn0.RXv5Gg369huUOKmgqsou4PkoeYwWO2-S9TzHu2a2-40";
 
-const supabase =
+const client =
 window.supabase.createClient(
     SUPABASE_URL,
     SUPABASE_KEY
@@ -149,41 +114,131 @@ document
     .value
     .trim();
 
-    console.log("เริ่มเช็ค");
-    console.log("key =", key);
+    if(!key){
 
-    try {
+        alert("กรุณาใส่ License");
+
+        return;
+
+    }
+
+    try{
 
         const { data, error } =
-        await supabase
-        .from("licenses")
-        .select("*")
-        .eq("license_key", key);
+await client
+.from("licenses")
+.select("*")
+.eq("license_key", key)
+.single();
 
-        console.log("data =", data);
-        console.log("error =", error);
+console.log("DATA =", data);
+console.log("ERROR =", error);
 
-        if(error){
-            alert("มี error ดู Console");
+if(error){
+
+    alert(
+        "ERROR: " +
+        JSON.stringify(error)
+    );
+
+    return;
+}
+
+if(!data){
+
+    alert("ไม่พบ License");
+
+    return;
+}
+
+        if(error || !data){
+
+            alert("License ไม่ถูกต้อง");
+
             return;
+
         }
 
-        if(!data || data.length === 0){
-            alert("ไม่พบ License");
-            return;
+        let device =
+        localStorage.getItem("device");
+
+        if(!device){
+
+            device =
+            crypto.randomUUID();
+
+            localStorage.setItem(
+                "device",
+                device
+            );
+
         }
 
-        alert("เจอ License แล้ว!");
+        if(!data.device_id){
 
-    } catch(err){
+            const { error:updateError } =
+            await client
+            .from("licenses")
+            .update({
+                device_id:device
+            })
+            .eq("license_key", key);
+
+            if(updateError){
+
+                alert("บันทึก License ไม่สำเร็จ");
+
+                console.log(updateError);
+
+                return;
+
+            }
+
+            localStorage.setItem(
+                "licensed",
+                "yes"
+            );
+
+            location.href =
+            "game.html";
+
+            return;
+
+        }
+
+        if(data.device_id !== device){
+
+            alert(
+                "คีย์นี้ถูกใช้แล้ว"
+            );
+
+            return;
+
+        }
+
+        localStorage.setItem(
+            "licensed",
+            "yes"
+        );
+
+        location.href =
+        "game.html";
+
+    }
+
+    catch(err){
 
         console.error(err);
-        alert("เกิด Exception ดู Console");
+
+        alert(
+            "เกิดข้อผิดพลาด"
+        );
 
     }
 
 });
 
 </script>
+
 </body>
 </html>
